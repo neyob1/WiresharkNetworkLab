@@ -129,11 +129,11 @@ Example: Packet 8 showed ~1 second delay from previous packet this helps identif
 
 <img width="500" height="400" alt="Screenshot 2026-03-31 181833" src="https://github.com/user-attachments/assets/4c8c1065-168b-4b9c-b853-bd1dd03f5f95" />
 
-### 5. Simulated Troubleshooting Scenario 
+### 5. Simulated Troubleshooting Scenarios
 
 #### Step 1. DNS Analysis
 
-**Set Up**: For this scenario, I ran two domains on my wifi, one real and one fake to see what kind of response we would get from the DNS server.
+**Set Up**: For this scenario, I ran two domains on my wifi, one real(google.com) and one fake to see what kind of response we would get from the DNS server.
 
 Filtered for DNS packet using the script "dns"
 
@@ -141,132 +141,94 @@ Filtered for DNS packet using the script "dns"
 
 For the fake website the standard query tells us “No such name” meaning that the website does not exist.
 
-<img width="500" height="400" alt="Screenshot 2026-04-01 145434" src="https://github.com/user-attachments/assets/892dc3a2-de9b-45c6-8a12-81027aaa78ff" />
+<img width="1000" height="800" alt="Screenshot 2026-04-01 145434" src="https://github.com/user-attachments/assets/892dc3a2-de9b-45c6-8a12-81027aaa78ff" />
+
+**Real Domain Observations**
+
+For the fake website example we had the query and it's response right after one another for easy locating and analysis. However that is not always the case, packets don’t always arrive in neat pairs.
+
+To match the google.com query with its response we must use a script (dns contains “google”) in our display filter that is filtering for all DNS packets related to google.com.
+
+Now we can clearly see a DNS packet related to google.com with a Transaction ID of 0xde33, transaction id is crucial for locating a response.
+
+<img width="500" height="400" alt="Screenshot 2026-04-01 151537" src="https://github.com/user-attachments/assets/9e87b98d-1428-406c-9c52-288457ca7c72" />
+
+Back in our display filter we can use dns.id == 0xde33, which gives a clean two packet display of the query and its response.
+
+<img width="500" height="400" alt="Screenshot 2026-04-01 153326" src="https://github.com/user-attachments/assets/87495c63-bf3b-4fa1-a6b7-b228e89b4a90" />
+
+A request and a reply indicates that website does and the query was sucessful.
+
+#### Step 2. TCP Analysis
+
+TCP uses a 3-way handshake:
+SYN → Request connection
+SYN-ACK → Acknowledgment
+ACK → Connection established
+
+Use script "tcp" in our display filter and click on a packet. For this example I used the website LinkedIn. 
+
+**Confirming the Handshake**
+
+Once I located a TCP packet related to LinkedIn, I followed the stream and analayzed three packets. One that included SYN, a second that included SYN, ACK and a third one that had ACK. All three being present tells me that the connection worked and the site loaded manually.
+
+<img width="600" height="500" alt="Screenshot 2026-04-01 164125" src="https://github.com/user-attachments/assets/cd645aa6-eba9-4e97-b798-30d9433b901e" />
+
+**TCP Retransmissions** 
+
+Occurs when the sender in this case the computer does not receive acknowledgment in time. This leads to TCP resending the packet until it does receive acknowledgment.
+
+TCP retransmitted packets can be viewed by using the script “tcp.analysis.retransmission”
+
+<img width="500" height="400" alt="Screenshot 2026-04-01 165940" src="https://github.com/user-attachments/assets/1f0705ee-3108-4f93-9b63-af1407802af8" />
+
+
+**Simulation**
+
+- Opened a website
+- Disabled Wi-Fi for 2-3 seconds while loading
+
+Observation: Packets were retransmitted with gaps that were exponentially increasing due to TCP backoff. This occurs when the network is unstable or dropping packets. 
+
+**TCP Backoff**: Every time time a packet is sent and is met with no acknowledgement, the time between retransmission doubles.
+
+<img width="500" height="400" alt="Screenshot 2026-04-01 171153" src="https://github.com/user-attachments/assets/34c1e3be-b3d1-44e5-8899-8ad43cfe3f43" />
+
+#### Step 3: HTTP Analysis 
+
+**Filter:** “http” and it will show all packets regarding communication between a client server about a specific action or resource.
+
+**GET Request:** Packets labeled “GET”  indicate that resources are being requested from the server
+
+<img width="700" height="600" alt="Screenshot 2026-04-01 184612" src="https://github.com/user-attachments/assets/e33ad814-dd68-4103-bd25-bebdded05a8e" />
+
+Http request packet > middle panel > expand Hypertext Transfer Protocol shows us exactly what the client requested from the server
+
+<img width="700" height="600" alt="Screenshot 2026-04-01 184552" src="https://github.com/user-attachments/assets/30a642b1-1c48-4229-8bf2-a5505a97c9f1" />
+
+**Server Response:** Directly after the GET request will be server responses such as 200 OK, 404 Not Found, 500 Internal Server Error which shows how the server responded to the request
+
+The 200 OK = success indicates the client's request was successfully received, understood, and accepted by the server.
+
+<img width="682" height="400" alt="Screenshot 2026-04-01 184525" src="https://github.com/user-attachments/assets/c0390b8c-d284-4f9b-af63-58faa23b4542" />
+
+### Key Takeaways
+
+- Wireshark provides deep visibility into network behavior
+- Filtering is essential for effective analysis
+- DNS, TCP, and HTTP work together in most web activity
+- Timing and retransmissions are critical for troubleshooting
+- Command-line tools like dumpcap improve performance under load
 
 
 
 
-- Set up a static IP address for both the Windows server and client by onfiguring the network adapter settings to match the IP configuration identified via ipconfig.
-
-- Same configuration was then repeated on the Windows 11 client
-
-Static addressing prevents domain authentication failures caused by dynamic IP changes.
-
-#### Attaching to the Domain
-
-- In the settings for the client I went to Access work or school/Join this device to a local active directory domain/enter domain name/enter username and password/restart the computer
-
-- To confirm the client was attached to the domain I went to Active Direcetory Users and Computer and confirmed the computer(WS01) was listed
-
-<img width="500" height="400" alt="Screenshot 2026-02-28 212015" src="https://github.com/user-attachments/assets/3adf9ab8-a765-47ba-94c7-2923bb1d7ab3" />
-
-### 3. Orginazational Units and Access Control Design
-
-Overview: The approach of creating orginizational groups and even groups within them allows us to add role-based permissions to an entire group instead of having to modify each user indiviudally promoting efficiency.
-
-- Created three diffrent Orginazational Units (OUs) reprsenting diffrent departments (Engineering,Management,IT) to reprsent a real work enviornment
-- Designed the OU structure to reflect departmental seperation when it comes to administration access
-- Created a security group called Engineering Share to grant that specific group access to shared resources
-
-  Added:
-- 2 users from the Engineering Department
-- 1 user from management(simulating cross-department collaboration)
-
-<img width="500" height="400" alt="Screenshot 2026-03-01 123542" src="https://github.com/user-attachments/assets/befe4f31-69d9-4d30-a640-c0172de113c1" />
-
-- Assigned permissions to the shared resource using the Engineering Share security group
-
-Under advanced security settings we can ensure that Engineering Share group (besides administrator) is the only one who recieves said permissions
-
-<img width="500" height="400" alt="image" src="https://github.com/user-attachments/assets/b513b326-ec44-4a9f-884f-c07cfc72b42d" />
 
 
-### 4. Group Policy Objects
 
-Overview: Group Policy Objects (GPOs) allow administrators to centrally manage system configurations and user environments within an Active Directory domain. The GPO that will be created in this step is a desktop background for the engineering department.
 
-#### Policy Configuration
 
-- Created a custom white desktop wallpaper
 
-- Stored the wallpaper inside the NETLOGON share, which allows domain-wide access to files used in policy deployment
-
-<img width="500" height="400" alt="movingwallpaperintoNETLOGON" src="https://github.com/user-attachments/assets/616e9400-0ff6-49ac-b6f4-b89d3f3cb236" />
-
-- Copied the file path so it can be pasted into the policy setting later
-
-#### Policy Deployment
-
-- Created a GPO called "SetEngineeringBackground" for the engineering OU 
-
-<img width="400" height="400" alt="Setengbackground" src="https://github.com/user-attachments/assets/dd165971-ff2e-4ecf-b2ab-3f0b4846547a" />
-
-- Located the policy setting for desktop wallaper where I was able paste the file path from earlier and enable it
-
-<img width="500" height="400" alt="pasted the filepath for wallpaper policy" src="https://github.com/user-attachments/assets/fee5689b-6e2f-4796-816b-a031c84b43e1" />
-
-- Logged into domain accounts belonging to Engineering users and verified that they did have the wallpaper active
-
-- Users outside the Engineering OU were not affected by the policy, confirming that the GPO was correctly applied.
-
-### 5. Ticket Processing
-
-Overview: In IT environments, help desk requests are typically managed through a ticketing system. A ticket represents a user request or issue that requires administrative action, such as password resets, account unlocks, or access permissions. For this step I processed a hypothetical ticket coming from a manager regarding the desktop wallpaper that set in step 4. 
-
-Ticket:
-
-<img width="500" height="400" alt="Screenshot 2026-03-01 143933" src="https://github.com/user-attachments/assets/e3a07205-3e15-4486-b721-9fa6ba135f5f" />
-
-- Under tools in the domain server I accessed group policy management and located the setting that prevents the changing of the background under the engineering organizational unit
-
-<img width="500" height="400" alt="LockingDesktopWallpaper" src="https://github.com/user-attachments/assets/705f46a1-d0c5-4172-8b13-9e6bd6363a08" />
-
-- To confirm the policy was enforced, I logged in as one of the users from the engineering department. I was completely prhohibited from changing the background which can be seen below
-
-<img width="500" height="400" alt="VirtualBox_Windows for HD_01_03_2026_15_01_46" src="https://github.com/user-attachments/assets/d154671b-e65e-4b2d-a445-1a18bb235f56" />
-
-### 6. Task Automation with Powershell
-
-Overview: Task automation is beneficial because instead of doing tasks manually in AD such as creating users manually like we did earlier in step 2, we can write a script that does all of it for us. For this step I utilized Powershell to create an individual user for the domain.
-
-Powershell script to create the user: 
-
-<img width="500" height="400" alt="Automating Task w Powershell" src="https://github.com/user-attachments/assets/609051e2-f99b-435b-8330-94382dd5a8c8" />
-
-### 7. Resetting AD Passwords
-
-Overview: Account lockout policies are commonly used in enterprise environments to prevent unauthorized access and brute-force login attempts. In this lab, an account lockout threshold was configured through Group Policy to simulate a security control used in real-world Active Directory environments.
-
-After three failed login attempts, the user account becomes locked and requires administrative intervention to regain access.
-
-#### Manual Process
-
-First I took a manual approach to for the password reset by doing it through the domain controller, this method is less efficient but demonstrated what goes on behind the scenes.
-
-- Configured an Account Lockout Policy under Group Policy Management which locked users out after 3 incorrect login attempts
-
-<img width="500" height="400" alt="Account Lockout Threshold" src="https://github.com/user-attachments/assets/5f142a17-ab5a-4906-9c0d-170c5aa0c1ac" />
-
-- Switched over to the Windows Client and triggered the lockout using one of the created users
-
-- Reset the user's password through Active Directory Users and Computers
-
-<img width="500" height="400" alt="pass reset" src="https://github.com/user-attachments/assets/dac8b6de-c0cd-4afb-981f-e545af45e4e6" />
-
-#### Automated Process
-
-For a more effecient practice I repeated this password reset using Powershell automation. 
-
-##### Powershell Script
-
-<img width="500" height="400" alt="reset password PS" src="https://github.com/user-attachments/assets/6d0ab820-9148-46cf-aeb1-56f4c668fd07" />
-
-PowerShell allows administrators to quickly reset passwords and unlock accounts without navigating the Active Directory which lowers the risk for any configuration errors
-
-##### Applies to both manual and automated process:
-
-- In a real-world enviornment the user would be notified of the temporary password through a secure form of communication
-- The user would then login on thier end using that password where they would then prompted to reset it again using thier own password
 
 
 
