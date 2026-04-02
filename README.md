@@ -33,11 +33,11 @@ This lab explores how to use Wireshark to capture, filter, and analyze network t
 
 ### Lab Setup
 
-- Wireshark shows all interfaces with activity.
+Wireshark shows all interfaces with activity.
 
 <img width="500" height="400" alt="Screenshot 2026-03-29 204609" src="https://github.com/user-attachments/assets/37dc91a6-55ee-4af9-be89-df8d26050168" />
 
-- Using Manage Interfaces, unnecessary interfaces can be hidden to reduce clutter.
+Using Manage Interfaces, unnecessary interfaces can be hidden to reduce clutter.
 
 <img width="500" height="454" alt="Screenshot 2026-03-29 205803" src="https://github.com/user-attachments/assets/09dacb69-5a76-481d-bd2f-42b25c0acb4c" />
 
@@ -115,13 +115,36 @@ Manually configured my host to have the name “Client” and one destination to
 <img width="443" height="302" alt="Screenshot 2026-03-30 231957" src="https://github.com/user-attachments/assets/779e78b7-ec8f-4d7f-acc7-8060242b58e1" />
 
 
+### 4. Time Analysis  
+
+**Time Column***: Can be used to identify delays, detect anomolies or track event timing.
+
+To set a packet as a reference Right-click → Set Time Reference counts time elapsed in refrence to that packet.
+
+<img width="500" height="400" alt="Screenshot 2026-03-31 175616" src="https://github.com/user-attachments/assets/982c5d57-4ace-4eea-8941-7c063c30d8f0" />
+
+**Time Since Previous Frame**: Column(time since previous frame in this TCP stream) that can be added which measures the time between packets within a specific TCP conversation. Finding this time would require some extra calculation if we were only looking at Delta time.
+
+Example: Packet 8 showed ~1 second delay from previous packet this helps identify slow or interrupted communication.
+
+<img width="500" height="400" alt="Screenshot 2026-03-31 181833" src="https://github.com/user-attachments/assets/4c8c1065-168b-4b9c-b853-bd1dd03f5f95" />
+
+### 5. Simulated Troubleshooting Scenario 
+
+#### Step 1. DNS Analysis
+
+**Set Up**: For this scenario, I ran two domains on my wifi, one real and one fake to see what kind of response we would get from the DNS server.
+
+Filtered for DNS packet using the script "dns"
+
+**Fake Domain Observations**
+
+For the fake website the standard query tells us “No such name” meaning that the website does not exist.
+
+<img width="500" height="400" alt="Screenshot 2026-04-01 145434" src="https://github.com/user-attachments/assets/892dc3a2-de9b-45c6-8a12-81027aaa78ff" />
 
 
-- Entered the settings for both the Windows 11 client and the server and assigned both to the ADNetwork
 
-<img width="500" height="400" alt="Network Details" src="https://github.com/user-attachments/assets/539aab18-f2b3-4f27-9663-0aa88f15c520" />
-
-#### Configuring Static IP Address
 
 - Set up a static IP address for both the Windows server and client by onfiguring the network adapter settings to match the IP configuration identified via ipconfig.
 
